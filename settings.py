@@ -1,8 +1,11 @@
 """持久化配置管理
 
 使用 data/settings.json 存储可通过管理面板修改的设置：
-  - proxy_target_url / proxy_api_key: 可覆盖环境变量的全局配置
+  - proxy_target_url: 上游中转站基址（唯一来源，不使用环境变量）
   - model_mappings: Cursor 模型名 → {upstream_model, backend, target_url, api_key, custom_instructions}
+
+密钥说明：上游 API 密钥从客户端请求头读取，不在本模块全局存储。
+模型映射中的 api_key 仅用于特定模型覆盖场景。
 """
 
 import copy
@@ -21,7 +24,6 @@ _cache = None
 
 _DEFAULTS = {
     'proxy_target_url': '',
-    'proxy_api_key': '',
     'debug_mode': '',
     'model_mappings': {},
 }
@@ -69,13 +71,12 @@ def get():
 
 
 def get_url():
-    """获取当前生效的上游 URL，优先使用持久化配置。"""
-    return get().get('proxy_target_url') or Config.PROXY_TARGET_URL
+    """获取当前生效的上游 URL，仅来自持久化配置。
 
-
-def get_key():
-    """获取当前生效的 API 密钥，优先使用持久化配置。"""
-    return get().get('proxy_api_key') or Config.PROXY_API_KEY
+    不使用环境变量回退。未配置时返回空字符串，
+    由调用方决定是否报错。
+    """
+    return get().get('proxy_target_url') or ''
 
 
 def get_debug_mode():
@@ -85,10 +86,14 @@ def get_debug_mode():
 
 
 def resolve_model(model_name):
-    """解析模型映射并返回完整的上游路由信息。"""
-    settings = get()
-    mappings = settings.get('model_mappings', {})
-    base_url, base_key = get_url(), get_key()
+    """解析模型映射并返回完整的上游路由信息。
+
+    api_key 仅取模型映射中的值（用于特定模型覆盖），不再有全局回退。
+    实际上游密钥由 routes/common.py 从请求头解析后合并。
+    """
+    s = get()
+    mappings = s.get('model_mappings', {})
+    base_url = get_url()
 
     if model_name in mappings:
         m = mappings[model_name]
@@ -99,7 +104,7 @@ def resolve_model(model_name):
             'upstream_model': m.get('upstream_model') or model_name,
             'backend': backend,
             'target_url': m.get('target_url') or base_url,
-            'api_key': m.get('api_key') or base_key,
+            'api_key': m.get('api_key') or '',
             'custom_instructions': m.get('custom_instructions') or '',
             'instructions_position': m.get('instructions_position') or 'prepend',
             'body_modifications': m.get('body_modifications') or {},
@@ -110,7 +115,7 @@ def resolve_model(model_name):
         'upstream_model': model_name,
         'backend': _auto_detect(model_name),
         'target_url': base_url,
-        'api_key': base_key,
+        'api_key': '',
         'custom_instructions': '',
         'instructions_position': 'prepend',
         'body_modifications': {},

@@ -45,16 +45,9 @@
       <div class="field">
         <label>中转站地址 (Proxy Target URL)</label>
         <div class="input-wrap"><input type="text" id="targetUrl" placeholder="https://your-relay.com"></div>
-        <div class="hint" id="envUrl"></div>
+        <div class="hint">上游中转站的基础地址（唯一配置来源）</div>
       </div>
-      <div class="field">
-        <label>中转站 API Key</label>
-        <div class="input-wrap">
-          <input type="password" id="proxyKey" placeholder="sk-xxx 或 Bearer token">
-          <button class="eye" onclick="togglePwd('proxyKey')">&#128065;</button>
-        </div>
-        <div class="hint" id="envKey"></div>
-      </div>
+      <div class="hint" style="margin-top:4px;margin-bottom:8px">上游 API Key 从 Cursor 请求头 (Authorization) 自动读取，无需在此配置。</div>
       <div class="field">
         <label>日志模式</label>
         <div class="input-wrap">
@@ -131,9 +124,9 @@
       <div class="input-wrap"><input type="text" id="mUrl" placeholder="留空则使用全局中转站地址"></div>
     </div>
     <div class="field">
-      <label>自定义 API Key <span style="color:var(--muted)">（可选，留空使用全局设置）</span></label>
+      <label>自定义 API Key <span style="color:var(--muted)">（可选，覆盖请求头密钥）</span></label>
       <div class="input-wrap">
-        <input type="password" id="mKey" placeholder="留空则使用全局 API Key">
+        <input type="password" id="mKey" placeholder="留空则使用请求头中的密钥">
         <button class="eye" onclick="togglePwd('mKey')">&#128065;</button>
       </div>
     </div>

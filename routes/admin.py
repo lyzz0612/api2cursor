@@ -85,22 +85,19 @@ def get_settings():
     s = settings.get()
     return jsonify({
         'proxy_target_url': s.get('proxy_target_url', ''),
-        'proxy_api_key': s.get('proxy_api_key', ''),
         'debug_mode': s.get('debug_mode', '') or Config.DEBUG_MODE,
-        'env_target_url': Config.PROXY_TARGET_URL,
-        'env_api_key': '***' if Config.PROXY_API_KEY else '',
     })
 
 
 @bp.route('/api/admin/settings', methods=['PUT'])
 def update_settings():
-    """更新全局上游地址与密钥配置。"""
+    """更新全局上游地址配置。"""
     err = _check_auth()
     if err:
         return err
     data = request.get_json(force=True)
     s = settings.get()
-    for key in ('proxy_target_url', 'proxy_api_key', 'debug_mode'):
+    for key in ('proxy_target_url', 'debug_mode'):
         if key in data:
             s[key] = data[key]
     return _save_and_respond(s, '全局设置已更新')

@@ -11,6 +11,8 @@ import json
 import logging
 from typing import Any
 
+from flask import request as flask_request
+
 import settings
 from utils.http import build_anthropic_headers, build_gemini_headers, build_openai_headers
 
@@ -38,15 +40,39 @@ class RouteContext:
     header_modifications: dict
 
 
+def extract_upstream_api_key(req=None) -> str:
+    """从当前 HTTP 请求头解析上游 API 密钥材料。
+
+    优先读取 Authorization: Bearer <token>，其次读取 x-api-key。
+    返回空字符串表示请求头中没有可用密钥。
+    """
+    if req is None:
+        req = flask_request
+    auth = req.headers.get('Authorization', '')
+    if auth.startswith('Bearer '):
+        token = auth[7:].strip()
+        if token:
+            return token
+    xkey = req.headers.get('x-api-key', '')
+    if xkey:
+        return xkey
+    return ''
+
+
 def build_route_context(client_model: str, is_stream: bool) -> RouteContext:
-    """解析模型映射，得到当前请求的统一路由上下文。"""
+    """解析模型映射，得到当前请求的统一路由上下文。
+
+    上游密钥优先级：请求头 → 模型映射 api_key。无全局回退。
+    """
     mapping = settings.resolve_model(client_model)
+    header_key = extract_upstream_api_key()
+    api_key = header_key or mapping.get('api_key') or ''
     return RouteContext(
         client_model=client_model,
         upstream_model=mapping['upstream_model'],
         backend=mapping['backend'],
         target_url=mapping['target_url'],
-        api_key=mapping['api_key'],
+        api_key=api_key,
         is_stream=is_stream,
         custom_instructions=mapping.get('custom_instructions', ''),
         instructions_position=mapping.get('instructions_position', 'prepend'),

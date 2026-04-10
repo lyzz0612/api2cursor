@@ -46,20 +46,24 @@ Cursor                         API 2 Cursor                           中转站
 cd api2cursor
 pip install -r requirements.txt
 cp .env.example .env
-# 编辑 .env 填入中转站地址和密钥
+# 编辑 .env（仅端口、超时等运行参数）
 python start.py
+# 启动后访问 http://localhost:3029/admin 配置中转站地址
 ```
 
 ### Docker 部署（拉取镜像）
 
+官方镜像发布在 **GitHub Container Registry（GHCR）**，坐标为 `ghcr.io/<owner>/<repo>`（与 GitHub 仓库名一致，须小写）。向 `main` 推送会更新 `latest` 标签；推送 `v*` 版本标签（如 `v1.0.0`）会同时打上对应语义化标签。无需配置额外 Secret，Actions 使用仓库自带的 `GITHUB_TOKEN` 推送镜像。
+
 ```bash
-# 拉取已发布的镜像
+cd api2cursor
+# 拉取已发布的镜像（以下为当前上游仓库示例；若你 fork 自建镜像，请改为你的 ghcr.io/… 地址，并与 docker-compose.yml 中 image 一致）
 docker pull ghcr.io/lyzz0612/api2cursor:latest
 
-# 启动（使用 docker-compose.yml 中的 image 配置）
 cp .env.example .env
-# 编辑 .env 填入中转站地址和密钥
+# 编辑 .env（仅端口、超时等运行参数）
 docker compose up -d
+# 启动后访问管理面板配置中转站地址
 ```
 
 如需固定版本，将 `latest` 替换为具体标签，例如 `v1.0.0`：
@@ -79,7 +83,7 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-服务启动后访问 `http://localhost:3029/admin` 进入管理面板。
+服务启动后访问 `http://localhost:3029/admin` 进入管理面板（若在 `.env` 中修改了 `PROXY_PORT`，请改用对应端口）。
 
 ## 配置
 
@@ -87,13 +91,11 @@ docker compose up -d --build
 
 | 变量 | 说明 | 默认值 |
 |---|---|---|
-| `PROXY_TARGET_URL` | 上游中转站地址 | `https://api.anthropic.com` |
-| `PROXY_API_KEY` | 上游 API 密钥 | |
 | `PROXY_PORT` | 服务监听端口 | `3029` |
 | `API_TIMEOUT` | 请求超时（秒） | `300` |
-| `ACCESS_API_KEY` | 访问鉴权密钥，留空不启用 | |
-| `DEBUG` | 兼容旧版调试开关，开启后等价于 `DEBUG_MODE=simple` | `false` |
 | `DEBUG_MODE` | 调试模式：`off` / `simple` / `verbose` | `off` |
+
+> **注意**：上游中转站地址在管理面板 (`/admin`) 中配置；上游 API 密钥从 Cursor 请求头 (`Authorization`) 自动读取，无需在服务端配置。
 
 ### 模型映射
 
@@ -102,7 +104,8 @@ docker compose up -d --build
 - **Cursor 模型名** — 在 Cursor 自定义模型中填入的名称
 - **上游模型名** — 发送到中转站的实际模型名
 - **后端类型** — `openai` (CC 格式) / `anthropic` (Messages 格式) / `responses` (Responses 格式) / `gemini` (Gemini Contents 格式) / `auto` (自动检测)
-- **自定义地址/密钥** — 可选，覆盖全局设置，实现分流到不同中转站
+- **自定义地址** — 可选，覆盖全局中转站地址，实现分流到不同中转站
+- **自定义密钥** — 可选，覆盖请求头中的密钥（用于特定模型需要不同凭证的场景）
 - **日志模式** — 可在管理面板全局设置中切换 `off` / `simple` / `verbose`
 
 **示例**：在 Cursor 中添加 `claude-sonnet-4-5-20250929`，映射到上游 `gpt-5.3-codex`，后端选 `openai`。Cursor 会用 CC 格式发送请求，代理直接转发到中转站的 `/v1/chat/completions`。
@@ -136,12 +139,15 @@ data/conversations/YYYY-MM-DD/{conversation_id}.json
 1. 打开 Cursor 设置 → Models
 2. 添加自定义模型，名称填映射中配置的 Cursor 模型名
 3. Override OpenAI Base URL 填 `http://localhost:3029`
-4. API Key 填 `ACCESS_API_KEY` 的值（未配置则随意填）
+4. API Key 填**中转站的真实 API 密钥**（此密钥将通过 `Authorization` 头透传到上游中转站）
 
 ## 项目结构
 
 ```text
 api2cursor/
+├── Dockerfile                  # 多阶段构建，供本地与 CI 使用
+├── docker-compose.yml          # 默认拉取 GHCR 镜像；可改为本地 build
+├── .github/workflows/          # GitHub Actions（如容器镜像发布）
 ├── start.py                    # 启动入口
 ├── app.py                      # Flask 应用工厂
 ├── config.py                   # 环境变量配置

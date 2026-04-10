@@ -21,8 +21,10 @@ from app import create_app
 def main():
     """加载应用并以 Waitress 方式启动代理服务。"""
     app = create_app()
+    import settings
     print(f'代理服务启动于 0.0.0.0:{Config.PROXY_PORT}')
-    print(f'上游地址: {Config.PROXY_TARGET_URL}')
+    target = settings.get_url()
+    print(f'上游地址: {target or "(未配置，请在管理面板设置)"}')
     print(f'管理面板: http://localhost:{Config.PROXY_PORT}/admin')
 
     from waitress import serve
