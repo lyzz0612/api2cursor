@@ -1,6 +1,8 @@
 services:
   api2cursor:
-    build: .
+    image: ghcr.io/lyzz0612/api2cursor:latest
+    # 本地开发时注释掉 image 并取消下行注释，使用本地构建：
+    # build: .
     container_name: api2cursor
     ports:
       - "${PROXY_PORT:-3029}:${PROXY_PORT:-3029}"

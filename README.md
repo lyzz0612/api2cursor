@@ -3,7 +3,7 @@
 让 Cursor 通过第三方中转站使用任意 LLM 模型的 API 代理服务。
 
 ## 它解决什么问题
-
+   
 Cursor 根据模型名发送不同格式的请求：
 
 | Cursor 模型名风格 | 请求格式 |
@@ -50,13 +50,33 @@ cp .env.example .env
 python start.py
 ```
 
-### Docker 部署
+### Docker 部署（拉取镜像）
+
+```bash
+# 拉取已发布的镜像
+docker pull ghcr.io/lyzz0612/api2cursor:latest
+
+# 启动（使用 docker-compose.yml 中的 image 配置）
+cp .env.example .env
+# 编辑 .env 填入中转站地址和密钥
+docker compose up -d
+```
+
+如需固定版本，将 `latest` 替换为具体标签，例如 `v1.0.0`：
+
+```bash
+docker pull ghcr.io/lyzz0612/api2cursor:v1.0.0
+```
+
+### Docker 部署（本地构建）
+
+如需修改代码后本地构建，编辑 `docker-compose.yml`，注释掉 `image` 行并取消 `build: .` 的注释：
 
 ```bash
 cd api2cursor
 cp .env.example .env
 # 编辑 .env
-docker compose up -d
+docker compose up -d --build
 ```
 
 服务启动后访问 `http://localhost:3029/admin` 进入管理面板。
