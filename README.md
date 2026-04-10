@@ -45,11 +45,11 @@ Cursor                         API 2 Cursor                           中转站
 ```bash
 cd api2cursor
 pip install -r requirements.txt
-cp .env.example .env
-# 编辑 .env（仅端口、超时等运行参数）
 python start.py
 # 启动后访问 http://localhost:3029/admin 配置中转站地址
 ```
+
+默认参数即可运行。若需改端口、超时等，可在项目根目录自行创建 `.env`（`python-dotenv` 会加载），变量见下表「环境变量」。
 
 ### Docker 部署（拉取镜像）
 
@@ -60,8 +60,7 @@ cd api2cursor
 # 拉取已发布的镜像（以下为当前上游仓库示例；若你 fork 自建镜像，请改为你的 ghcr.io/… 地址，并与 docker-compose.yml 中 image 一致）
 docker pull ghcr.io/lyzz0612/api2cursor:latest
 
-cp .env.example .env
-# 编辑 .env（仅端口、超时等运行参数）
+# 端口、超时等见 docker-compose.yml 中 environment
 docker compose up -d
 # 启动后访问管理面板配置中转站地址
 ```
@@ -78,12 +77,11 @@ docker pull ghcr.io/lyzz0612/api2cursor:v1.0.0
 
 ```bash
 cd api2cursor
-cp .env.example .env
-# 编辑 .env
+# 需要时编辑 docker-compose.yml（端口、超时等）
 docker compose up -d --build
 ```
 
-服务启动后访问 `http://localhost:3029/admin` 进入管理面板（若在 `.env` 中修改了 `PROXY_PORT`，请改用对应端口）。
+服务启动后访问 `http://localhost:3029/admin` 进入管理面板（若在 `docker-compose.yml` 中把对外端口改成非 3029，请改用对应主机端口访问）。
 
 ## 配置
 

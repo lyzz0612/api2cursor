@@ -5,14 +5,16 @@ services:
     # build: .
     container_name: api2cursor
     ports:
-      - "${PROXY_PORT:-3029}:${PROXY_PORT:-3029}"
-    env_file:
-      - .env
+      # 默认容器内监听 3029（与 config 默认一致）。若改容器内端口，需同步 ports 右侧与 healthcheck，并设置 environment.PROXY_PORT
+      - "3029:3029"
+    environment:
+      API_TIMEOUT: "300"
+      DEBUG_MODE: "off"
     volumes:
       - ./data:/app/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:${PROXY_PORT:-3029}/health"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3029/health"]
       interval: 30s
       timeout: 5s
       retries: 3
