@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 os.environ.pop('PROXY_TARGET_URL', None)
 os.environ.pop('PROXY_API_KEY', None)
-os.environ.pop('ACCESS_API_KEY', None)
+os.environ['ACCESS_API_KEY'] = 'test-access-key-for-unit-tests'
 
 import settings
 from routes.common import extract_upstream_api_key

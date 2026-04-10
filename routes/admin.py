@@ -66,8 +66,6 @@ def list_models():
 def admin_login():
     """校验管理面板登录密钥，并返回是否允许进入后台。"""
     data = request.get_json(force=True)
-    if not Config.ACCESS_API_KEY:
-        return jsonify({'ok': True, 'message': '未配置鉴权'})
     if data.get('key', '') == Config.ACCESS_API_KEY:
         return jsonify({'ok': True})
     return jsonify({'ok': False, 'message': '密钥错误'}), 401
@@ -204,8 +202,6 @@ def get_stats():
 
 def _check_auth():
     """Admin API 鉴权，返回 None 表示通过"""
-    if not Config.ACCESS_API_KEY:
-        return None
     auth = request.headers.get('Authorization', '')
     token = auth[7:] if auth.startswith('Bearer ') else request.headers.get('x-api-key', '')
     if token != Config.ACCESS_API_KEY:

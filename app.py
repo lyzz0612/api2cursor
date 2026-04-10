@@ -3,12 +3,13 @@
 创建并配置 Flask 应用：
   - 注册所有路由蓝图
   - 设置 JSON 错误处理器（避免返回 HTML）
-  - 配置全局鉴权中间件
+  - 校验必填环境变量 `ACCESS_API_KEY`（仅用于管理端，见 routes.admin）
 """
 
 import logging
+import os
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify
 from flask_cors import CORS
 
 import settings
@@ -22,8 +23,16 @@ def create_app():
     """创建并配置 Flask 应用实例。
 
     这里统一完成跨路由共享的初始化逻辑，包括配置加载、跨域、错误处理、
-    访问鉴权、健康检查以及蓝图注册。
+    管理端所需密钥校验、健康检查以及蓝图注册。
     """
+    access_key = (os.getenv('ACCESS_API_KEY') or '').strip()
+    if not access_key:
+        logger.critical(
+            '环境变量 ACCESS_API_KEY 必须设置为非空字符串（用于 /admin 与 /api/admin 访问控制）'
+        )
+        raise SystemExit(1)
+    Config.ACCESS_API_KEY = access_key
+
     app = Flask(__name__)
     CORS(app)
     settings.load()
@@ -44,31 +53,6 @@ def create_app():
     def internal_error(e):
         """将未捕获的服务端异常统一包装为 JSON 500 响应。"""
         return jsonify({'error': {'message': '服务器内部错误', 'type': 'server_error'}}), 500
-
-    # ─── 全局鉴权中间件 ──────────────────────────
-
-    @app.before_request
-    def check_access():
-        """在进入业务路由前校验访问密钥。
-
-        当配置了 `ACCESS_API_KEY` 时，除健康检查和管理面板相关路径外，
-        所有请求都必须携带正确的 Bearer Token 或 `x-api-key`。
-        """
-        if not Config.ACCESS_API_KEY:
-            return
-
-        # 无需鉴权的路径
-        skip = ('/health', '/admin', '/static/', '/api/admin')
-        if any(request.path == p or request.path.startswith(p) for p in skip):
-            return
-
-        auth = request.headers.get('Authorization', '')
-        token = auth[7:] if auth.startswith('Bearer ') else request.headers.get('x-api-key', '')
-        if token != Config.ACCESS_API_KEY:
-            logger.warning(f'鉴权拒绝: {request.path}')
-            return jsonify({
-                'error': {'message': 'API 密钥无效', 'type': 'authentication_error'}
-            }), 401
 
     # ─── 健康检查 ────────────────────────────────
 

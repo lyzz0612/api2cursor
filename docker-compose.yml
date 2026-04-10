@@ -8,6 +8,8 @@ services:
       # 默认容器内监听 3029（与 config 默认一致）。若改容器内端口，需同步 ports 右侧与 healthcheck，并设置 environment.PROXY_PORT
       - "3029:3029"
     environment:
+      # ACCESS_API_KEY：必填。仅用于管理面板 /admin 与 /api/admin；请改为强随机字符串（勿与 Cursor 内填的中转站 API Key 混淆）。
+      ACCESS_API_KEY: "replace-with-a-strong-secret"
       API_TIMEOUT: "300"
       DEBUG_MODE: "off"
     volumes:

@@ -18,8 +18,8 @@ class Config:
     PROXY_PORT = int(os.getenv('PROXY_PORT', '3029'))
     # 请求超时时间（秒）
     API_TIMEOUT = int(os.getenv('API_TIMEOUT', '300'))
-    # 访问鉴权密钥，留空则不启用鉴权
-    ACCESS_API_KEY = os.getenv('ACCESS_API_KEY', '')
+    # 管理面板与 /api/admin 访问密钥（必填，见 app.create_app 启动校验）
+    ACCESS_API_KEY = (os.getenv('ACCESS_API_KEY') or '').strip()
 
     # 调试模式分级：
     # - off: 关闭调试

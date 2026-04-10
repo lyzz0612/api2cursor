@@ -45,11 +45,12 @@ Cursor                         API 2 Cursor                           中转站
 ```bash
 cd api2cursor
 pip install -r requirements.txt
+# 根目录创建 .env，至少设置 ACCESS_API_KEY（见下表）
 python start.py
 # 启动后访问 http://localhost:3029/admin 配置中转站地址
 ```
 
-默认参数即可运行。若需改端口、超时等，可在项目根目录自行创建 `.env`（`python-dotenv` 会加载），变量见下表「环境变量」。
+除 `ACCESS_API_KEY` 外可使用默认参数。若需改端口、超时等，可在项目根目录自行创建 `.env`（`python-dotenv` 会加载），变量见下表「环境变量」。
 
 ### Docker 部署（拉取镜像）
 
@@ -90,10 +91,11 @@ docker compose up -d --build
 | 变量 | 说明 | 默认值 |
 |---|---|---|
 | `PROXY_PORT` | 服务监听端口 | `3029` |
+| `ACCESS_API_KEY` | **必填**。用于保护管理面板与 `/api/admin`（请求头 `Authorization: Bearer` 或 `x-api-key`，与登录页密钥一致）。**不**用于校验 Cursor 代理请求；上游密钥仍只来自 Cursor 请求头或模型映射 | （无默认值，未设置则无法启动） |
 | `API_TIMEOUT` | 请求超时（秒） | `300` |
 | `DEBUG_MODE` | 调试模式：`off` / `simple` / `verbose` | `off` |
 
-> **注意**：上游中转站地址在管理面板 (`/admin`) 中配置；上游 API 密钥从 Cursor 请求头 (`Authorization`) 自动读取，无需在服务端配置。
+> **注意**：上游中转站地址在管理面板 (`/admin`) 中配置；上游 API 密钥从 Cursor 请求头 (`Authorization`) 自动读取并转发给中转站，**无需**把 `ACCESS_API_KEY` 填进 Cursor；二者用途不同。
 
 ### 模型映射
 
