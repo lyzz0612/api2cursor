@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 bp = Blueprint('messages', __name__)
 
 
-@bp.route('/v1/messages', methods=['POST'])
+@bp.route('/v1/messages', methods=['GET', 'POST'])
 def messages_passthrough():
     """透传 Anthropic Messages 请求，并在必要时补齐 thinking 兼容层。"""
     original_payload = request.get_json(force=True)
@@ -40,7 +40,7 @@ def messages_passthrough():
     model = payload.get('model', 'unknown')
     is_stream = payload.get('stream', False)
 
-    logger.info(f'[透传] model={model} 流式={is_stream}')
+    logger.info(f'[透传] 方法={request.method} model={model} 流式={is_stream}')
 
     mapping = settings.resolve_model(model)
     url_base = mapping['target_url']

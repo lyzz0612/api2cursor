@@ -122,6 +122,7 @@ def log_route_context(route_name: str, ctx: RouteContext, *, extra: str = '') ->
     """统一输出路由级日志，避免不同入口的日志格式逐渐漂移。"""
     parts = [
         f'[{route_name}]',
+        f'方法={flask_request.method}',
         f'模型={ctx.client_model}',
         f'上游模型={ctx.upstream_model}',
         f'后端={ctx.backend}',

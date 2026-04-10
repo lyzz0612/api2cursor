@@ -47,6 +47,11 @@ def create_app():
     @app.errorhandler(405)
     def method_not_allowed(e):
         """将不支持的请求方法统一转换为 JSON 405 响应。"""
+        from flask import request as req
+        logger.warning(
+            '405 方法不允许: %s %s (允许: %s)',
+            req.method, req.path, e.valid_methods,
+        )
         return jsonify({'error': {'message': '方法不允许', 'type': 'method_not_allowed'}}), 405
 
     @app.errorhandler(500)
